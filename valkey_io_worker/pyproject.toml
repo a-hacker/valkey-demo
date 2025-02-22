@@ -1,0 +1,9 @@
+[project]
+name = "valkey-io-worker"
+version = "0.1.0"
+description = "IO worker for demoing valkey tables"
+requires-python = ">=3.11"
+dependencies = [
+    "polyfactory>=2.19.0",
+    "valkey[libvalkey]>=6.1.0",
+]

@@ -1,0 +1,55 @@
+version: "3.8"
+services:
+  db_writer_1:
+    build: ./valkey_io_worker
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - ROLE=writer
+      - WORKER_ID=1
+    networks:
+      - app-network
+  db_writer_2:
+    build: ./valkey_io_worker
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - ROLE=writer
+      - WORKER_ID=2
+    networks:
+      - app-network
+  db:
+    image: valkey/valkey:8.0.2
+    container_name: valkey
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    command: ["valkey-server", "--save", "", "--appendonly", "no"]
+    networks:
+      - app-network
+  db_reader:
+    build: ./valkey_io_worker
+    depends_on:
+      db_writer_1:
+        condition: service_completed_successfully
+      db_writer_2:
+        condition: service_completed_successfully
+      db:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    networks:
+      - app-network
+    environment:
+      - ROLE=reader
+    volumes:
+      - ./output:/app/output
+networks:
+  app-network:
+    driver: bridge
